@@ -914,6 +914,17 @@ def get_match_statistics(match_id: str):
         team_score = 0
         team_wickets = 0
         
+        # Calculate player performance scores for Man of the Match
+        player_scores = {}
+        
+        # Batting performance scoring
+        for batsman_name, batsman in batting_stats.items():
+            if batsman["balls"] > 0:  # Only consider batsmen who faced balls
+                score = 0
+                
+                # Base run score
+                score += batsman["runs"]
+                
                 # Strike rate bonus/penalty
                 strike_rate = batsman["strike_rate"]
                 if strike_rate > 150:
@@ -1012,15 +1023,12 @@ def get_match_statistics(match_id: str):
                 insights.append(f"Most economical: {most_economical['name']} (ER: {most_economical['economy_rate']})")
         
         return {
+            "batting_stats": list(batting_stats.values()),
+            "bowling_stats": list(bowling_stats.values()),
+            "fall_of_wickets": fall_of_wickets,
             "man_of_match": man_of_match,
             "player_scores": player_scores,
-            "insights": insights,
-            "match_summary": {
-                "total_runs": sum(b["runs"] for b in batting_stats),
-                "total_wickets": len(stats["fall_of_wickets"]),
-                "total_balls": stats["total_balls"],
-                "boundaries": sum(b["fours"] + b["sixes"] for b in batting_stats)
-            }
+            "insights": insights
         }
 
 @app.get("/api/matches/{match_id}/visualization")
@@ -1329,6 +1337,11 @@ def delete_team(team_name: str, current_user: str = Depends(verify_token)):
         conn.commit()
         
         return {"message": "Team deleted successfully"}
+
+# Add OPTIONS handler for CORS preflight requests
+@app.options("/{path:path}")
+def handle_options(path: str):
+    return {"message": "OK"}
 
 # Initialize database on module import
 init_database()

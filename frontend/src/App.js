@@ -5,7 +5,7 @@ import './App.css';
 import { initializeMobileEnhancements } from './mobileEnhancements';
 
 // Set up axios defaults
-axios.defaults.baseURL = process.env.REACT_APP_BACKEND_URL;
+axios.defaults.baseURL = process.env.REACT_APP_API_URL;
 
 // Auth Context
 const AuthContext = React.createContext();

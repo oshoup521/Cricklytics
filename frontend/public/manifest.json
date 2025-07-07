@@ -1,0 +1,46 @@
+{
+  "short_name": "Cricklytics",
+  "name": "Cricklytics - Cricket Scoring & Analytics",
+  "description": "A comprehensive cricket scoring and analytics platform with real-time updates and AI insights",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "logo192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "logo512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#3b82f6",
+  "background_color": "#f8fafc",
+  "orientation": "portrait-primary",
+  "categories": ["sports", "productivity"],
+  "lang": "en",
+  "scope": "/",
+  "shortcuts": [
+    {
+      "name": "Create Match",
+      "short_name": "Create",
+      "description": "Create a new cricket match",
+      "url": "/create-match",
+      "icons": [{ "src": "/logo192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "View Matches",
+      "short_name": "Matches",
+      "description": "Browse all cricket matches",
+      "url": "/matches",
+      "icons": [{ "src": "/logo192.png", "sizes": "192x192" }]
+    }
+  ]
+}

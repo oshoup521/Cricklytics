@@ -999,3 +999,100 @@
 .animate-pulse {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
+
+/* Mobile-specific improvements */
+@media (max-width: 768px) {
+  /* Better touch targets */
+  .touch-manipulation {
+    touch-action: manipulation;
+  }
+  
+  /* Prevent zoom on form inputs */
+  input[type="text"], 
+  input[type="email"], 
+  input[type="password"], 
+  input[type="tel"], 
+  input[type="url"], 
+  input[type="search"],
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+  
+  /* Mobile menu improvements */
+  .mobile-menu-button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Better button sizing for mobile */
+  .mobile-friendly-button {
+    min-height: 44px;
+    padding: 12px 16px;
+    font-size: 16px;
+  }
+  
+  /* Prevent text selection on buttons */
+  button, .button {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+  
+  /* Mobile form styling */
+  .mobile-form {
+    padding: 16px;
+    margin: 16px;
+  }
+  
+  /* Improve tap targets */
+  a, button, input, select, textarea {
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Mobile header adjustments */
+  .mobile-header {
+    padding: 8px 16px;
+  }
+  
+  /* Better mobile navigation */
+  .mobile-nav-item {
+    padding: 12px 16px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+}
+
+/* iOS Safari specific fixes */
+@supports (-webkit-touch-callout: none) {
+  /* iOS Safari form fixes */
+  input[type="text"], 
+  input[type="email"], 
+  input[type="password"] {
+    -webkit-appearance: none;
+    border-radius: 0;
+  }
+  
+  /* Prevent zoom on double tap */
+  * {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+  }
+  
+  /* Allow text selection in inputs */
+  input, textarea {
+    -webkit-user-select: text;
+  }
+}
+
+/* Android Chrome specific fixes */
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+  /* Prevent tap delay */
+  a, button, input, select, textarea {
+    touch-action: manipulation;
+  }
+}

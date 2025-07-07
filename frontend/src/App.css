@@ -1,0 +1,1001 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom styles for Cricklytics */
+.container {
+  max-width: 1200px;
+}
+
+/* Cricket themed colors */
+:root {
+  --cricket-green: #0f5132;
+  --cricket-blue: #0d6efd;
+  --cricket-gold: #ffc107;
+  --cricket-red: #dc3545;
+}
+
+/* Enhanced animations and transitions */
+* {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Keyframe animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInFromRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes bounce {
+  0%, 20%, 53%, 80%, 100% {
+    transform: translate3d(0, 0, 0);
+  }
+  40%, 43% {
+    transform: translate3d(0, -15px, 0);
+  }
+  70% {
+    transform: translate3d(0, -7px, 0);
+  }
+  90% {
+    transform: translate3d(0, -3px, 0);
+  }
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+/* Animation classes */
+.animate-fade-in {
+  animation: fadeIn 0.8s ease-out;
+}
+
+.animate-slide-in-left {
+  animation: slideInFromLeft 0.6s ease-out;
+}
+
+.animate-slide-in-right {
+  animation: slideInFromRight 0.6s ease-out;
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-bounce {
+  animation: bounce 2s infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Enhanced hover effects */
+.hover-lift {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Glass morphism effect */
+.glass {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Gradient backgrounds */
+.gradient-bg-1 {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.gradient-bg-2 {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.gradient-bg-3 {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+/* Custom button styles with enhanced animations */
+.btn-primary {
+  @apply bg-blue-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-600 transform hover:scale-105 active:scale-95 transition-all duration-200 shadow-lg hover:shadow-xl;
+}
+
+.btn-secondary {
+  @apply bg-gray-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-600 transform hover:scale-105 active:scale-95 transition-all duration-200 shadow-lg hover:shadow-xl;
+}
+
+.btn-success {
+  @apply bg-green-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-600 transform hover:scale-105 active:scale-95 transition-all duration-200 shadow-lg hover:shadow-xl;
+}
+
+.btn-danger {
+  @apply bg-red-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-red-600 transform hover:scale-105 active:scale-95 transition-all duration-200 shadow-lg hover:shadow-xl;
+}
+
+.btn-outline {
+  @apply border-2 border-blue-500 text-blue-500 px-6 py-3 rounded-lg font-semibold hover:bg-blue-500 hover:text-white transform hover:scale-105 active:scale-95 transition-all duration-200;
+}
+
+/* Enhanced card styles */
+.card {
+  @apply bg-white rounded-xl shadow-lg p-6 border border-gray-100 hover:shadow-xl transition-all duration-300;
+}
+
+.card-interactive {
+  @apply bg-white rounded-xl shadow-lg p-6 border border-gray-100 hover:shadow-xl hover:border-blue-200 transform hover:scale-105 transition-all duration-300 cursor-pointer;
+}
+
+.card-header {
+  @apply border-b border-gray-200 pb-4 mb-6;
+}
+
+/* Enhanced form styles */
+.form-group {
+  @apply mb-6;
+}
+
+.form-label {
+  @apply block text-sm font-semibold text-gray-700 mb-2;
+}
+
+.form-input {
+  @apply w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200;
+}
+
+.form-input:focus {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Live indicator */
+.live-indicator {
+  @apply relative;
+}
+
+.live-indicator::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, #ff0000, #ff6b6b, #ff0000);
+  border-radius: inherit;
+  z-index: -1;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* Match status indicators */
+.status-live {
+  @apply bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold animate-pulse;
+}
+
+.status-completed {
+  @apply bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold;
+}
+
+.status-upcoming {
+  @apply bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-bold;
+}
+
+/* Responsive navigation */
+.mobile-menu {
+  @apply fixed inset-0 bg-black bg-opacity-50 z-50 md:hidden;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+}
+
+.mobile-menu.open {
+  transform: translateX(0);
+}
+
+.mobile-menu-content {
+  @apply bg-white h-full w-64 p-6 shadow-xl;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+}
+
+.mobile-menu.open .mobile-menu-content {
+  transform: translateX(0);
+}
+
+/* Scoring interface enhancements */
+.scoring-button {
+  @apply bg-white border-2 border-gray-300 rounded-lg p-4 text-center font-semibold hover:border-blue-500 hover:bg-blue-50 transition-all duration-200 transform hover:scale-105 active:scale-95;
+}
+
+.scoring-button.active {
+  @apply border-blue-500 bg-blue-500 text-white;
+}
+
+.scoring-button.runs {
+  @apply hover:border-green-500 hover:bg-green-50;
+}
+
+.scoring-button.runs.active {
+  @apply border-green-500 bg-green-500 text-white;
+}
+
+.scoring-button.wicket {
+  @apply hover:border-red-500 hover:bg-red-50;
+}
+
+.scoring-button.wicket.active {
+  @apply border-red-500 bg-red-500 text-white;
+}
+
+.scoring-button.extras {
+  @apply hover:border-yellow-500 hover:bg-yellow-50;
+}
+
+.scoring-button.extras.active {
+  @apply border-yellow-500 bg-yellow-500 text-white;
+}
+
+/* Keyboard shortcuts indicator */
+.keyboard-shortcut {
+  @apply absolute top-1 right-1 bg-gray-600 text-white text-xs px-1 rounded opacity-60;
+}
+
+/* Loading states */
+.loading-spinner {
+  @apply animate-spin rounded-full border-b-2 border-blue-600;
+}
+
+.skeleton {
+  @apply animate-pulse bg-gray-200 rounded;
+}
+
+/* Toast notifications */
+.toast {
+  @apply fixed top-4 right-4 bg-white rounded-lg shadow-lg border p-4 z-50;
+  animation: slideInFromRight 0.3s ease-out;
+}
+
+.toast.success {
+  @apply border-green-500 bg-green-50;
+}
+
+.toast.error {
+  @apply border-red-500 bg-red-50;
+}
+
+.toast.warning {
+  @apply border-yellow-500 bg-yellow-50;
+}
+
+.toast.info {
+  @apply border-blue-500 bg-blue-50;
+}
+
+/* Team Management Styles */
+.team-card {
+  transition: all 0.3s ease;
+}
+
+.team-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.player-role-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.modal-backdrop {
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.2s ease-out;
+}
+
+.modal-content {
+  animation: slideInFromBottom 0.3s ease-out;
+}
+
+@keyframes slideInFromBottom {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Delete confirmation styles */
+.delete-confirm {
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+}
+
+/* Enhanced loading spinner */
+.loading-spinner {
+  border: 3px solid #f3f4f6;
+  border-top: 3px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Team statistics grid */
+.team-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  gap: 0.5rem;
+}
+
+/* Player list animations */
+.player-item {
+  animation: slideInFromLeft 0.3s ease-out;
+}
+
+.player-item:nth-child(even) {
+  animation-delay: 0.1s;
+}
+
+/* Responsive team card grid */
+@media (max-width: 768px) {
+  .team-card {
+    margin-bottom: 1rem;
+  }
+  
+  .modal-content {
+    margin: 1rem;
+    max-height: calc(100vh - 2rem);
+  }
+}
+
+/* Enhanced form styles for team management */
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-label {
+  display: block;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.form-input, .form-select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  background-color: #ffffff;
+}
+
+.form-input:focus, .form-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  transform: translateY(-1px);
+}
+
+.form-input:hover, .form-select:hover {
+  border-color: #9ca3af;
+}
+
+/* Button enhancements */
+.btn-primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-secondary {
+  background-color: #f3f4f6;
+  color: #374151;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  border: 2px solid #e5e7eb;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background-color: #e5e7eb;
+  border-color: #d1d5db;
+  transform: translateY(-1px);
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
+}
+
+.btn-danger:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+}
+
+/* Alert styles */
+.alert {
+  padding: 1rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  margin-bottom: 1rem;
+}
+
+.alert-error {
+  background-color: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.alert-success {
+  background-color: #f0f9ff;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+}
+
+.alert-warning {
+  background-color: #fffbeb;
+  color: #d97706;
+  border: 1px solid #fed7aa;
+}
+
+/* Responsive utilities */
+@media (max-width: 768px) {
+  .mobile-responsive {
+    @apply text-sm px-3 py-2;
+  }
+  
+  .mobile-card {
+    @apply mx-2 rounded-lg;
+  }
+  
+  .mobile-spacing {
+    @apply space-y-4;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .dark-mode {
+    @apply bg-gray-900 text-white;
+  }
+  
+  .dark-mode .card {
+    @apply bg-gray-800 border-gray-700;
+  }
+  
+  .dark-mode .form-input {
+    @apply bg-gray-800 border-gray-600 text-white;
+  }
+}
+
+/* Cricket-specific styling */
+.cricket-field {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, #4ade80 0%, #22c55e 100%);
+  border-radius: 50%;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cricket-pitch {
+  width: 60px;
+  height: 120px;
+  background: #a16207;
+  border-radius: 4px;
+  position: relative;
+}
+
+.cricket-pitch::before,
+.cricket-pitch::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 8px;
+  background: white;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.cricket-pitch::before {
+  top: 5px;
+}
+
+.cricket-pitch::after {
+  bottom: 5px;
+}
+
+.form-label {
+  @apply block text-gray-700 text-sm font-bold mb-2;
+}
+
+.form-input {
+  @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500;
+}
+
+.form-select {
+  @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white;
+}
+
+.form-textarea {
+  @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500;
+}
+
+/* Alert styles */
+.alert {
+  @apply px-4 py-3 rounded mb-4;
+}
+
+.alert-success {
+  @apply bg-green-100 border border-green-400 text-green-700;
+}
+
+.alert-error {
+  @apply bg-red-100 border border-red-400 text-red-700;
+}
+
+.alert-info {
+  @apply bg-blue-100 border border-blue-400 text-blue-700;
+}
+
+.alert-warning {
+  @apply bg-yellow-100 border border-yellow-400 text-yellow-700;
+}
+
+/* Status badges */
+.status-badge {
+  @apply px-3 py-1 rounded-full text-sm font-medium;
+}
+
+.status-setup {
+  @apply bg-gray-100 text-gray-800;
+}
+
+.status-live {
+  @apply bg-yellow-100 text-yellow-800;
+}
+
+.status-completed {
+  @apply bg-green-100 text-green-800;
+}
+
+.status-paused {
+  @apply bg-orange-100 text-orange-800;
+}
+
+/* Scoreboard styles */
+.scoreboard {
+  @apply bg-gray-900 text-white p-6 rounded-lg;
+}
+
+.score-display {
+  @apply text-4xl font-bold;
+}
+
+.overs-display {
+  @apply text-2xl font-semibold;
+}
+
+/* Scoring interface styles */
+.scoring-button {
+  @apply p-4 rounded-md font-bold text-lg transition-colors border-2 border-transparent hover:border-gray-300;
+}
+
+.scoring-button:active {
+  @apply transform scale-95;
+}
+
+.runs-0 {
+  @apply bg-gray-500 text-white hover:bg-gray-600;
+}
+
+.runs-1, .runs-2, .runs-3 {
+  @apply bg-blue-500 text-white hover:bg-blue-600;
+}
+
+.runs-4 {
+  @apply bg-green-500 text-white hover:bg-green-600;
+}
+
+.runs-6 {
+  @apply bg-red-500 text-white hover:bg-red-600;
+}
+
+.wicket-button {
+  @apply bg-red-600 text-white hover:bg-red-700;
+}
+
+.extras-button {
+  @apply bg-orange-500 text-white hover:bg-orange-600;
+}
+
+/* On-strike indicator */
+.on-strike {
+  @apply bg-yellow-200 text-yellow-800 border-2 border-yellow-400;
+}
+
+.off-strike {
+  @apply bg-gray-200 text-gray-700;
+}
+
+/* Ball display in over */
+.ball-display {
+  @apply inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-semibold m-1;
+}
+
+.ball-dot {
+  @apply bg-gray-400 text-white;
+}
+
+.ball-single {
+  @apply bg-blue-500 text-white;
+}
+
+.ball-boundary {
+  @apply bg-green-500 text-white;
+}
+
+.ball-six {
+  @apply bg-red-500 text-white;
+}
+
+.ball-wicket {
+  @apply bg-red-600 text-white;
+}
+
+.ball-extra {
+  @apply bg-orange-500 text-white;
+}
+
+/* Live scoring layout */
+.scoring-grid {
+  @apply grid gap-4;
+}
+
+.scoring-section {
+  @apply bg-white p-4 rounded-lg shadow-md;
+}
+
+.player-card {
+  @apply p-3 rounded-lg border-2 transition-colors;
+}
+
+.player-card.active {
+  @apply border-yellow-400 bg-yellow-50;
+}
+
+.player-card.inactive {
+  @apply border-gray-200 bg-gray-50;
+}
+
+/* Commentary box */
+.commentary-box {
+  @apply w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50;
+}
+
+/* Recent balls timeline */
+.balls-timeline {
+  @apply flex flex-wrap gap-2 p-4 bg-gray-50 rounded-lg;
+}
+
+.balls-timeline .ball-score {
+  @apply w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold;
+}
+
+/* Quick actions */
+.quick-actions {
+  @apply flex flex-wrap gap-2;
+}
+
+.quick-action {
+  @apply px-3 py-2 rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors;
+}
+
+/* Responsive scoring */
+@media (max-width: 768px) {
+  .score-display {
+    @apply text-3xl;
+  }
+  
+  .scoring-button {
+    @apply p-3 text-base;
+  }
+  
+  .scoring-grid {
+    @apply grid-cols-2 gap-2;
+  }
+}
+
+/* Animations */
+.ball-animation {
+  @apply transition-all duration-300 ease-in-out;
+}
+
+.score-update {
+  @apply animate-pulse;
+}
+
+/* Live indicator */
+.live-indicator {
+  @apply relative;
+}
+
+.live-indicator::before {
+  @apply content-[''] absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-ping;
+}
+
+.live-indicator::after {
+  @apply content-[''] absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full;
+}
+
+/* Match card styles */
+.match-card {
+  @apply bg-white rounded-lg shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow;
+}
+
+.match-teams {
+  @apply flex items-center justify-between;
+}
+
+.team-name {
+  @apply text-lg font-semibold;
+}
+
+.team-score {
+  @apply text-2xl font-bold;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .container {
+    @apply px-4;
+  }
+  
+  .match-teams {
+    @apply flex-col space-y-4;
+  }
+}
+
+/* Loading spinner */
+.spinner {
+  @apply animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600;
+}
+
+/* Cricket field visualization */
+.cricket-field {
+  @apply relative bg-green-500 rounded-full aspect-square;
+}
+
+.cricket-pitch {
+  @apply absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-yellow-200 rounded-lg;
+}
+
+/* Player stats */
+.player-stats {
+  @apply grid grid-cols-2 md:grid-cols-4 gap-4;
+}
+
+.stat-item {
+  @apply text-center;
+}
+
+.stat-value {
+  @apply text-2xl font-bold text-blue-600;
+}
+
+.stat-label {
+  @apply text-sm text-gray-600;
+}
+
+/* Over-by-over display */
+.over-display {
+  @apply flex flex-wrap gap-2;
+}
+
+.ball-score {
+  @apply w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-sm font-semibold;
+}
+
+.ball-boundary {
+  @apply bg-green-500 text-white;
+}
+
+.ball-six {
+  @apply bg-red-500 text-white;
+}
+
+.ball-wicket {
+  @apply bg-red-600 text-white;
+}
+
+.ball-dot {
+  @apply bg-gray-400 text-white;
+}
+
+/* Animation classes */
+.fade-in {
+  @apply opacity-0 animate-pulse;
+}
+
+.slide-in {
+  @apply transform translate-x-full transition-transform duration-300;
+}
+
+/* Print styles for scorecards */
+@media print {
+  .no-print {
+    @apply hidden;
+  }
+  
+  .print-only {
+    @apply block;
+  }
+}
+
+/* Custom scrollbar styles */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(59, 130, 246, 0.5) rgba(243, 244, 246, 0.5);
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(243, 244, 246, 0.5);
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(59, 130, 246, 0.5);
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(59, 130, 246, 0.8);
+}
+
+/* Modal backdrop blur effect */
+.backdrop-blur-sm {
+  backdrop-filter: blur(4px);
+}
+
+/* Enhanced button animations */
+.btn-primary {
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  transform: translateY(0);
+  transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+}
+
+/* Form input enhancements */
+.form-input:focus, .form-select:focus {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Loading spinner animation */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Pulse animation for live indicators */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}

@@ -24,6 +24,7 @@ allowed_origins = [
     "https://cricklytics.oshoupadhyay.in",  # Production subdomain
     "https://oshoupadhyay.in",  # Main domain
     "https://www.oshoupadhyay.in",  # WWW subdomain
+    "https://cricklytics.vercel.app",  # Vercel default domain
 ]
 
 app.add_middleware(

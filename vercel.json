@@ -12,7 +12,7 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "https://cricklytics-backend.onrender.com/api/$1"
+      "dest": "https://cricklytics.onrender.com/api/$1"
     },
     {
       "src": "/(.*)",
@@ -22,7 +22,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://cricklytics-backend.onrender.com/api/$1"
+      "destination": "https://cricklytics.onrender.com/api/$1"
     }
   ],
   "headers": [

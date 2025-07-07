@@ -133,12 +133,26 @@ function Header() {
   const { user, logout } = React.useContext(AuthContext);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Cleanup body scroll on unmount
+  React.useEffect(() => {
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
+
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
+    // Prevent body scroll when menu is open
+    if (!mobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
   };
 
   const closeMobileMenu = () => {
     setMobileMenuOpen(false);
+    document.body.style.overflow = 'unset';
   };
 
   return (
@@ -231,7 +245,8 @@ function Header() {
           {/* Mobile Menu Button */}
           <button
             onClick={toggleMobileMenu}
-            className="lg:hidden flex items-center justify-center w-10 h-10 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+            className="lg:hidden flex items-center justify-center w-12 h-12 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors mobile-menu-button"
+            style={{touchAction: 'manipulation'}}
             aria-label="Toggle mobile menu"
           >
             {mobileMenuOpen ? (
@@ -248,8 +263,20 @@ function Header() {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="lg:hidden mt-4 pb-4 border-t border-gray-200">
-            <nav className="flex flex-col space-y-3 pt-4">
+          <div className="lg:hidden mt-4 pb-4 border-t border-gray-200 relative z-50 bg-white">
+            <div className="flex justify-between items-center pt-3 pb-2 px-2">
+              <span className="text-sm font-medium text-gray-500">Menu</span>
+              <button
+                onClick={closeMobileMenu}
+                className="p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                aria-label="Close menu"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <nav className="flex flex-col space-y-3 px-2">
               <a 
                 href="/" 
                 onClick={closeMobileMenu}
@@ -309,14 +336,16 @@ function Header() {
                     <a
                       href="/login"
                       onClick={closeMobileMenu}
-                      className="block w-full text-center border border-gray-300 text-gray-700 hover:bg-gray-50 px-4 py-3 rounded-md font-medium transition-colors"
+                      className="block w-full text-center border border-gray-300 text-gray-700 hover:bg-gray-50 px-4 py-3 rounded-md font-medium transition-colors hover:shadow-md active:scale-95 cursor-pointer"
+                      style={{touchAction: 'manipulation'}}
                     >
                       🔑 Login
                     </a>
                     <a
                       href="/register"
                       onClick={closeMobileMenu}
-                      className="block w-full text-center bg-blue-500 hover:bg-blue-600 text-white px-4 py-3 rounded-md font-medium transition-colors"
+                      className="block w-full text-center bg-blue-500 hover:bg-blue-600 text-white px-4 py-3 rounded-md font-medium transition-colors hover:shadow-md active:scale-95 cursor-pointer"
+                      style={{touchAction: 'manipulation'}}
                     >
                       🚀 Register
                     </a>
@@ -327,14 +356,6 @@ function Header() {
           </div>
         )}
       </div>
-
-      {/* Mobile Menu Overlay */}
-      {mobileMenuOpen && (
-        <div 
-          className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
-          onClick={closeMobileMenu}
-        ></div>
-      )}
     </header>
   );
 }
@@ -619,7 +640,7 @@ function LoginPage() {
   };
 
   return (
-    <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-6">
+    <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-6 m-4 sm:m-6">
       <h2 className="text-2xl font-bold mb-6 text-center">Login to Cricklytics</h2>
       
       {error && (
@@ -637,7 +658,8 @@ function LoginPage() {
             type="text"
             value={credentials.username}
             onChange={(e) => setCredentials({...credentials, username: e.target.value})}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
+            style={{fontSize: '16px'}} // Prevents zoom on iOS
             required
           />
         </div>
@@ -651,13 +673,15 @@ function LoginPage() {
               type={showPassword ? "text" : "password"}
               value={credentials.password}
               onChange={(e) => setCredentials({...credentials, password: e.target.value})}
-              className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-3 pr-12 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
+              style={{fontSize: '16px'}} // Prevents zoom on iOS
               required
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700"
+              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700 touch-manipulation"
+              style={{touchAction: 'manipulation'}}
             >
               {showPassword ? '🙈' : '👁️'}
             </button>
@@ -667,7 +691,8 @@ function LoginPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 disabled:opacity-50 transition-colors"
+          className="w-full bg-blue-500 text-white py-3 px-4 rounded-md hover:bg-blue-600 disabled:opacity-50 transition-colors font-medium text-base touch-manipulation"
+          style={{touchAction: 'manipulation'}}
         >
           {loading ? 'Logging in...' : 'Login'}
         </button>
@@ -706,7 +731,7 @@ function RegisterPage() {
   };
 
   return (
-    <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-6">
+    <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-6 m-4 sm:m-6">
       <h2 className="text-2xl font-bold mb-6 text-center">Register for Cricklytics</h2>
       
       {error && (
@@ -724,7 +749,8 @@ function RegisterPage() {
             type="text"
             value={userData.username}
             onChange={(e) => setUserData({...userData, username: e.target.value})}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
+            style={{fontSize: '16px'}} // Prevents zoom on iOS
             required
           />
         </div>
@@ -737,7 +763,8 @@ function RegisterPage() {
             type="email"
             value={userData.email}
             onChange={(e) => setUserData({...userData, email: e.target.value})}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
+            style={{fontSize: '16px'}} // Prevents zoom on iOS
             required
           />
         </div>
@@ -751,13 +778,15 @@ function RegisterPage() {
               type={showPassword ? "text" : "password"}
               value={userData.password}
               onChange={(e) => setUserData({...userData, password: e.target.value})}
-              className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-3 pr-12 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
+              style={{fontSize: '16px'}} // Prevents zoom on iOS
               required
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700"
+              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700 touch-manipulation"
+              style={{touchAction: 'manipulation'}}
             >
               {showPassword ? '🙈' : '👁️'}
             </button>
@@ -767,7 +796,8 @@ function RegisterPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 disabled:opacity-50 transition-colors"
+          className="w-full bg-blue-500 text-white py-3 px-4 rounded-md hover:bg-blue-600 disabled:opacity-50 transition-colors font-medium text-base touch-manipulation"
+          style={{touchAction: 'manipulation'}}
         >
           {loading ? 'Registering...' : 'Register'}
         </button>

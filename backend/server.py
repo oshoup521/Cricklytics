@@ -21,17 +21,19 @@ app = FastAPI(title="Cricklytics API", version="1.0.0")
 # CORS configuration
 allowed_origins = [
     "http://localhost:3000",  # Local development
-    "https://cricklytics.oshoupadhyay.in",  # Production subdomain
+    "https://criclytics.oshoupadhyay.in",  # Production subdomain (fixed spelling)
     "https://oshoupadhyay.in",  # Main domain
     "https://www.oshoupadhyay.in",  # WWW subdomain
     "https://cricklytics.vercel.app",  # Vercel default domain
+    "https://cricklytics-git-main-oshoup521s-projects.vercel.app",  # Vercel git domain
+    "https://cricklytics-oshoup521s-projects.vercel.app",  # Vercel user domain
 ]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_credentials=True,  # Allow credentials for authentication
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
 )
 
@@ -359,6 +361,49 @@ def get_current_user(current_user: str = Depends(verify_token)):
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
         return dict(user)
+
+@app.get("/api/stats/global")
+def get_global_stats():
+    """Get global platform statistics"""
+    with get_db() as conn:
+        cursor = conn.cursor()
+        
+        # Get total matches
+        cursor.execute("SELECT COUNT(*) as count FROM matches")
+        total_matches = cursor.fetchone()['count']
+        
+        # Get total balls (from match_balls table if it exists)
+        try:
+            cursor.execute("SELECT COUNT(*) as count FROM match_balls")
+            total_balls = cursor.fetchone()['count']
+        except sqlite3.OperationalError:
+            total_balls = 0
+        
+        # Get total runs (sum from matches)
+        cursor.execute("""
+            SELECT COALESCE(SUM(
+                CAST(SUBSTR(team1_score, 1, INSTR(team1_score, '/') - 1) AS INTEGER) +
+                CAST(SUBSTR(team2_score, 1, INSTR(team2_score, '/') - 1) AS INTEGER)
+            ), 0) as total_runs
+            FROM matches 
+            WHERE team1_score IS NOT NULL AND team1_score != '0/0' 
+            AND team2_score IS NOT NULL AND team2_score != 'Yet to bat'
+        """)
+        try:
+            total_runs = cursor.fetchone()['total_runs'] or 0
+        except:
+            total_runs = 0
+        
+        # Get active users (users who have created matches)
+        cursor.execute("SELECT COUNT(DISTINCT created_by) as count FROM matches")
+        active_users = cursor.fetchone()['count']
+        
+        return {
+            "totalMatches": total_matches,
+            "totalBalls": total_balls,
+            "totalRuns": total_runs,
+            "activeUsers": active_users
+        }
 
 @app.post("/api/matches")
 def create_match(match: MatchCreate, current_user: str = Depends(verify_token)):
@@ -869,49 +914,6 @@ def get_match_statistics(match_id: str):
         team_score = 0
         team_wickets = 0
         
-        for ball in balls:
-            team_score += ball['runs'] + ball['extras']
-            if ball['wicket']:
-                team_wickets += 1
-                fall_of_wickets.append({
-                    "wicket_number": team_wickets,
-                    "player": ball['wicket_player'],
-                    "score": team_score,
-                    "over": f"{ball['over_number']}.{ball['ball_number']}",
-                    "wicket_type": ball['wicket_type']
-                })
-        
-        return {
-            "match": dict(match),
-            "batting_statistics": list(batting_stats.values()),
-            "bowling_statistics": list(bowling_stats.values()),
-            "fall_of_wickets": fall_of_wickets,
-            "total_balls": len(balls)
-        }
-
-@app.get("/api/matches/{match_id}/ai-analysis")
-def get_ai_analysis(match_id: str):
-    with get_db() as conn:
-        cursor = conn.cursor()
-        
-        # Get match statistics
-        stats = get_match_statistics(match_id)
-        
-        batting_stats = stats["batting_statistics"]
-        bowling_stats = stats["bowling_statistics"] 
-        match = stats["match"]
-        
-        # AI Man of the Match Algorithm
-        player_scores = {}
-        
-        # Batting performance scoring
-        for batsman in batting_stats:
-            if batsman["balls"] > 0:  # Only consider players who faced balls
-                score = 0
-                
-                # Base score from runs (1 point per run)
-                score += batsman["runs"]
-                
                 # Strike rate bonus/penalty
                 strike_rate = batsman["strike_rate"]
                 if strike_rate > 150:

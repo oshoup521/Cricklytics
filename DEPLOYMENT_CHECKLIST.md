@@ -29,7 +29,7 @@
   - [ ] **Important**: Remove the `backend/` prefix from Start Command
 - [ ] Configure Environment Variables:
   - [ ] `SECRET_KEY`: (generate secure key)
-  - [ ] `PYTHON_VERSION`: `3.11`
+  - [ ] **Remove PYTHON_VERSION** if added (Render auto-detects)
 - [ ] Deploy and test backend
 - [ ] Note backend URL: `https://cricklytics-backend.onrender.com`
 

@@ -18,8 +18,9 @@ Start Command: uvicorn server:app --host 0.0.0.0 --port $PORT
 ### Environment Variables
 ```
 SECRET_KEY = [Generate a secure 32-character random string]
-PYTHON_VERSION = 3.11
 ```
+
+**Note**: Don't add PYTHON_VERSION - Render automatically uses Python 3.11
 
 ## ⚠️ Common Mistakes to Avoid
 

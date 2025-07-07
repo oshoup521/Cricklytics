@@ -9,20 +9,14 @@
       }
     }
   ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "https://cricklytics.onrender.com/api/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "frontend/$1"
-    }
-  ],
   "rewrites": [
     {
       "source": "/api/(.*)",
       "destination": "https://cricklytics.onrender.com/api/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "frontend/$1"
     }
   ],
   "headers": [

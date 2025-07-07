@@ -26,6 +26,7 @@
   - [ ] Build Command: `pip install -r requirements.txt`
   - [ ] Start Command: `uvicorn server:app --host 0.0.0.0 --port $PORT`
   - [ ] Plan: Free
+  - [ ] **Important**: Remove the `backend/` prefix from Start Command
 - [ ] Configure Environment Variables:
   - [ ] `SECRET_KEY`: (generate secure key)
   - [ ] `PYTHON_VERSION`: `3.11`

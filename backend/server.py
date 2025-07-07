@@ -12,7 +12,7 @@ import os
 from contextlib import contextmanager
 
 # Configuration
-SECRET_KEY = os.environ.get("SECRET_KEY", "your-secret-key-here")
+SECRET_KEY = os.environ.get("SECRET_KEY", "osho")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 

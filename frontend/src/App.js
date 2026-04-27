@@ -2955,12 +2955,12 @@ function MatchDetailPage() {
                       <span className="font-medium">
                         {ball.runs}{ball.extras > 0 && `+${ball.extras}`} runs
                       </span>
-                      {ball.wicket && (
+                      {!!ball.wicket && (
                         <span className="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium">
                           WICKET
                         </span>
                       )}
-                      {ball.extras_type && (
+                      {!!ball.extras_type && (
                         <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium">
                           {ball.extras_type.toUpperCase()}
                         </span>

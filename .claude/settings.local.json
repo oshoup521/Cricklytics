@@ -1,9 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(cat)",
-      "Read(//tmp/**)",
-      "Bash(npm run *)"
-    ]
-  }
-}

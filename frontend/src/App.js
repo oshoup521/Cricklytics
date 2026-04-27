@@ -2862,14 +2862,27 @@ function MatchDetailPage() {
                     'bg-gray-50 border-transparent'
                   }`}>
                     {/* Ball badge */}
-                    <div className={`shrink-0 w-9 h-9 rounded-full flex items-center justify-center font-black text-sm ${
-                      isWicket ? 'bg-red-600 text-white' :
-                      isSix    ? 'bg-emerald-600 text-white' :
-                      isFour   ? 'bg-blue-600 text-white' :
-                      'bg-gray-200 text-gray-700'
-                    }`}>
-                      {isWicket ? 'W' : `${ball.runs}${ball.extras > 0 ? '+' : ''}`}
-                    </div>
+                    {(() => {
+                      const extType = ball.extras_type;
+                      let badgeLabel;
+                      if (isWicket) badgeLabel = 'W';
+                      else if (extType === 'wide') badgeLabel = 'Wd';
+                      else if (extType === 'no-ball') badgeLabel = 'NB';
+                      else if (extType === 'bye') badgeLabel = `${ball.extras}B`;
+                      else if (extType === 'leg-bye') badgeLabel = `${ball.extras}LB`;
+                      else badgeLabel = ball.runs;
+                      return (
+                        <div className={`shrink-0 w-9 h-9 rounded-full flex items-center justify-center font-black text-sm ${
+                          isWicket ? 'bg-red-600 text-white' :
+                          isSix    ? 'bg-emerald-600 text-white' :
+                          isFour   ? 'bg-blue-600 text-white' :
+                          extType  ? 'bg-yellow-400 text-yellow-900' :
+                          'bg-gray-200 text-gray-700'
+                        }`}>
+                          {badgeLabel}
+                        </div>
+                      );
+                    })()}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-xs font-semibold text-gray-500 tabular-nums">
@@ -2885,7 +2898,7 @@ function MatchDetailPage() {
                       <div className="text-xs text-gray-500 truncate mt-0.5">
                         {ball.batsman} <span className="text-gray-300">vs</span> {ball.bowler}
                       </div>
-                      {ball.commentary && (
+                      {ball.commentary && !/^\d+ runs? scored$/.test(ball.commentary) && (
                         <div className="text-xs text-gray-600 italic mt-0.5 truncate">{ball.commentary}</div>
                       )}
                     </div>
@@ -3559,6 +3572,7 @@ function ScoringPage() {
   const [currentBowler, setCurrentBowler] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [autoSubmit, setAutoSubmit] = useState(true);
+  const [pendingCommentary, setPendingCommentary] = useState('');
   const [currentBall, setCurrentBall] = useState({
     runs: 0,
     extras: 0,
@@ -3809,12 +3823,23 @@ function ScoringPage() {
         wicket: isWicket,
         wicket_type: wicketDetails.wicketType || null,
         wicket_player: wicketDetails.wicketPlayer || null,
-        commentary: wicketDetails.commentary || `${runs} runs scored`
+        commentary: wicketDetails.commentary || pendingCommentary || (() => {
+          if (extrasType === 'wide') return extras > 1 ? `Wide, ${extras} runs` : 'Wide';
+          if (extrasType === 'no-ball') return extras > 1 ? `No ball, ${extras} runs` : 'No ball';
+          if (extrasType === 'bye') return extras === 1 ? '1 bye' : `${extras} byes`;
+          if (extrasType === 'leg-bye') return extras === 1 ? '1 leg bye' : `${extras} leg byes`;
+          if (runs === 0) return 'Dot ball';
+          if (runs === 4) return 'Four!';
+          if (runs === 6) return 'Six!';
+          return `${runs} run${runs !== 1 ? 's' : ''}`;
+        })()
       };
       
       console.log('Submitting ball data:', ballData);
       
       await axios.post(`/api/matches/${id}/score`, ballData);
+      
+      setPendingCommentary('');
       
       // Refresh match data to get updated over/ball counts from backend
       await fetchMatchDetails();
@@ -4307,6 +4332,23 @@ function ScoringPage() {
                 </select>
               </div>
 
+              {/* Commentary (always visible) */}
+              <div>
+                <label className="block text-gray-700 font-semibold mb-1 text-sm">
+                  Commentary <span className="font-normal text-gray-400">(optional — applies to next ball)</span>
+                </label>
+                <input
+                  type="text"
+                  value={autoSubmit ? pendingCommentary : currentBall.commentary}
+                  onChange={(e) => autoSubmit
+                    ? setPendingCommentary(e.target.value)
+                    : setCurrentBall(prev => ({ ...prev, commentary: e.target.value }))
+                  }
+                  placeholder="e.g. Full toss, driven through covers..."
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                />
+              </div>
+
               {/* Runs Buttons */}
               <div>
                 <label className="block text-gray-700 font-semibold mb-2">Runs</label>
@@ -4501,18 +4543,6 @@ function ScoringPage() {
                       </div>
                     </div>
                   )}
-
-                  {/* Commentary */}
-                  <div>
-                    <label className="block text-gray-700 font-semibold mb-2">Commentary</label>
-                    <textarea
-                      value={currentBall.commentary}
-                      onChange={(e) => setCurrentBall(prev => ({ ...prev, commentary: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
-                      rows="2"
-                      placeholder="Ball commentary..."
-                    />
-                  </div>
                 </>
               )}
 
@@ -4824,7 +4854,7 @@ function ScoringPage() {
                                 </span>
                               </div>
                               
-                              {ball.commentary && (
+                              {ball.commentary && !/^\d+ runs? scored$/.test(ball.commentary) && (
                                 <div className="text-sm text-gray-600 italic mt-1">
                                   {ball.commentary}
                                 </div>

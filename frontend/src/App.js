@@ -2525,6 +2525,8 @@ function MatchDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [stats, setStats] = useState(null);
+  const [celebration, setCelebration] = useState(null); // { type: 'six'|'four'|'wicket', text, sub }
+  const lastBallIdRef = React.useRef(null);
   const { user } = React.useContext(AuthContext);
 
   const fetchMatchDetails = useCallback(async ({ silent = false } = {}) => {
@@ -2533,7 +2535,27 @@ function MatchDetailPage() {
         axios.get(`/api/matches/${id}/score`),
         axios.get(`/api/matches/${id}/statistics`).catch(() => ({ data: null })) // Don't fail if stats aren't available
       ]);
-      
+
+      // Detect new ball events for celebrations
+      const newBalls = matchResponse.data?.balls || [];
+      if (newBalls.length > 0) {
+        const latest = newBalls[newBalls.length - 1];
+        const latestId = `${latest.over_number}-${latest.ball_number}`;
+        if (latestId !== lastBallIdRef.current) {
+          lastBallIdRef.current = latestId;
+          if (latest.wicket) {
+            setCelebration({ type: 'wicket', text: 'WICKET!', sub: `${latest.batsman} is OUT` });
+            setTimeout(() => setCelebration(null), 3500);
+          } else if (latest.runs === 6) {
+            setCelebration({ type: 'six', text: 'SIX!', sub: `${latest.batsman} hits a maximum` });
+            setTimeout(() => setCelebration(null), 3000);
+          } else if (latest.runs === 4) {
+            setCelebration({ type: 'four', text: 'FOUR!', sub: `${latest.batsman} finds the boundary` });
+            setTimeout(() => setCelebration(null), 3000);
+          }
+        }
+      }
+
       setMatch(matchResponse.data);
       setStats(statsResponse.data);
       setError('');
@@ -2827,40 +2849,49 @@ function MatchDetailPage() {
           {/* Recent Balls */}
           <div className="bg-white rounded-xl shadow-lg p-6">
             <h3 className="text-xl font-bold mb-4">Recent Balls</h3>
-            <div className="space-y-3 max-h-80 overflow-y-auto">
-              {match.balls && match.balls.length > 0 ? match.balls.slice(-10).reverse().map((ball, index) => (
-                <div key={index} className="flex justify-between items-start p-3 bg-gray-50 rounded-lg">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2 text-sm">
-                      <span className="font-semibold text-green-700 tabular-nums">
-                        {ball.over_number - 1}.{ball.legal_ball_number}
-                      </span>
-                      <span className="text-gray-500">•</span>
-                      <span className="font-medium">
-                        {ball.runs}{ball.extras > 0 && `+${ball.extras}`} runs
-                      </span>
-                      {!!ball.wicket && (
-                        <span className="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium">
-                          WICKET
-                        </span>
-                      )}
-                      {!!ball.extras_type && (
-                        <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium">
-                          {ball.extras_type.toUpperCase()}
-                        </span>
-                      )}
+            <div className="space-y-2 max-h-80 overflow-y-auto">
+              {match.balls && match.balls.length > 0 ? match.balls.slice(-10).reverse().map((ball, index) => {
+                const isSix = ball.runs === 6 && !ball.wicket;
+                const isFour = ball.runs === 4 && !ball.wicket;
+                const isWicket = !!ball.wicket;
+                return (
+                  <div key={index} className={`flex items-center gap-3 px-3 py-2.5 rounded-lg border ${
+                    isWicket ? 'bg-red-50 border-red-200' :
+                    isSix    ? 'bg-emerald-50 border-emerald-200' :
+                    isFour   ? 'bg-blue-50 border-blue-200' :
+                    'bg-gray-50 border-transparent'
+                  }`}>
+                    {/* Ball badge */}
+                    <div className={`shrink-0 w-9 h-9 rounded-full flex items-center justify-center font-black text-sm ${
+                      isWicket ? 'bg-red-600 text-white' :
+                      isSix    ? 'bg-emerald-600 text-white' :
+                      isFour   ? 'bg-blue-600 text-white' :
+                      'bg-gray-200 text-gray-700'
+                    }`}>
+                      {isWicket ? 'W' : `${ball.runs}${ball.extras > 0 ? '+' : ''}`}
                     </div>
-                    <div className="text-xs text-gray-600 mt-1">
-                      {ball.batsman} vs {ball.bowler}
-                    </div>
-                    {ball.commentary && (
-                      <div className="text-xs text-gray-700 mt-1 italic">
-                        {ball.commentary}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-xs font-semibold text-gray-500 tabular-nums">
+                          {ball.over_number - 1}.{ball.legal_ball_number}
+                        </span>
+                        {isWicket && <span className="text-xs font-bold text-red-700 uppercase tracking-wide">Wicket</span>}
+                        {isSix    && <span className="text-xs font-bold text-emerald-700 uppercase tracking-wide">Six</span>}
+                        {isFour   && <span className="text-xs font-bold text-blue-700 uppercase tracking-wide">Four</span>}
+                        {ball.extras_type && (
+                          <span className="text-xs text-yellow-700 font-medium">{ball.extras_type}</span>
+                        )}
                       </div>
-                    )}
+                      <div className="text-xs text-gray-500 truncate mt-0.5">
+                        {ball.batsman} <span className="text-gray-300">vs</span> {ball.bowler}
+                      </div>
+                      {ball.commentary && (
+                        <div className="text-xs text-gray-600 italic mt-0.5 truncate">{ball.commentary}</div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              )) : (
+                );
+              }) : (
                 <div className="text-center py-8 text-gray-500">
                   <p>No balls recorded yet</p>
                   <p className="text-sm">Match scoring hasn't started</p>
@@ -2987,6 +3018,74 @@ function MatchDetailPage() {
         </div>
       </div>
     </div>
+
+      {/* Celebration Overlay */}
+      {celebration && (
+        <div className={`fixed inset-0 z-50 flex items-center justify-center pointer-events-none`}>
+          {/* Backdrop flash */}
+          <div className={`absolute inset-0 animate-celebrationFade ${
+            celebration.type === 'wicket' ? 'bg-red-900' :
+            celebration.type === 'six' ? 'bg-green-900' : 'bg-blue-900'
+          } opacity-0`} />
+
+          {/* Particles */}
+          {celebration.type !== 'wicket' && Array.from({ length: 18 }).map((_, i) => {
+            const tx = (i % 2 === 0 ? 1 : -1) * (30 + (i * 17) % 70);
+            const ty = -(50 + (i * 23) % 90);
+            return (
+              <div
+                key={i}
+                className="absolute w-2 h-2 rounded-full animate-particle"
+                style={{
+                  left: `${10 + (i * 5) % 80}%`,
+                  top: `${20 + (i * 7) % 60}%`,
+                  backgroundColor: ['#fbbf24','#34d399','#60a5fa','#f87171','#a78bfa','#fb923c'][i % 6],
+                  animationDelay: `${(i * 0.07).toFixed(2)}s`,
+                  '--tx': `${tx}px`,
+                  '--ty': `${ty}px`,
+                }}
+              />
+            );
+          })}
+
+          {/* Main card */}
+          <div className={`relative text-center px-12 py-8 rounded-2xl shadow-2xl animate-celebrationPop ${
+            celebration.type === 'wicket'
+              ? 'bg-gradient-to-br from-red-700 to-red-900 text-white'
+              : celebration.type === 'six'
+              ? 'bg-gradient-to-br from-green-600 to-emerald-800 text-white'
+              : 'bg-gradient-to-br from-blue-600 to-blue-900 text-white'
+          }`}>
+            <div className="text-7xl font-black tracking-tight leading-none mb-2">
+              {celebration.text}
+            </div>
+            <div className="text-lg font-medium opacity-90">{celebration.sub}</div>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes celebrationFade {
+          0%   { opacity: 0.45; }
+          60%  { opacity: 0.45; }
+          100% { opacity: 0; }
+        }
+        @keyframes celebrationPop {
+          0%   { opacity: 0; transform: scale(0.6); }
+          18%  { opacity: 1; transform: scale(1.08); }
+          32%  { transform: scale(0.97); }
+          45%  { transform: scale(1); }
+          75%  { opacity: 1; transform: scale(1); }
+          100% { opacity: 0; transform: scale(0.9); }
+        }
+        @keyframes particle {
+          0%   { opacity: 1; transform: translate(0,0) scale(1); }
+          100% { opacity: 0; transform: translate(var(--tx, 40px), var(--ty, -80px)) scale(0.3); }
+        }
+        .animate-celebrationFade { animation: celebrationFade 3s ease-out forwards; }
+        .animate-celebrationPop  { animation: celebrationPop  3s ease-out forwards; }
+        .animate-particle        { animation: particle 1.4s ease-out forwards; }
+      `}</style>
     </>
   );
 }

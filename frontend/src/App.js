@@ -3963,8 +3963,16 @@ function ScoringPage() {
   };
 
   const getAvailableBatsmen = () => {
-    return getBattingTeamPlayers().filter(player => 
-      player.name !== batsmen.striker && player.name !== batsmen.nonStriker
+    // Build set of players already dismissed this innings
+    const dismissedNames = new Set(
+      (match?.balls || [])
+        .filter(b => b.innings === currentInnings && b.wicket && b.batsman)
+        .map(b => b.batsman)
+    );
+    return getBattingTeamPlayers().filter(player =>
+      player.name !== batsmen.striker &&
+      player.name !== batsmen.nonStriker &&
+      !dismissedNames.has(player.name)
     );
   };
 

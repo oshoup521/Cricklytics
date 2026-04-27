@@ -1099,7 +1099,7 @@ def get_match_statistics(match_id: str):
                 }
         
         # Bowling performance scoring
-        for bowler in bowling_stats:
+        for bowler in bowling_stats.values():
             if bowler["balls_bowled"] > 0:  # Only consider bowlers who bowled
                 score = 0
                 
@@ -1147,32 +1147,35 @@ def get_match_statistics(match_id: str):
         insights = []
         
         # Top scorer insight
-        if batting_stats:
-            top_scorer = max(batting_stats, key=lambda x: x["runs"])
+        batting_list = list(batting_stats.values())
+        bowling_list = list(bowling_stats.values())
+
+        if batting_list:
+            top_scorer = max(batting_list, key=lambda x: x["runs"])
             if top_scorer["runs"] > 0:
                 insights.append(f"Highest scorer: {top_scorer['name']} with {top_scorer['runs']} runs")
         
         # Best bowler insight
-        if bowling_stats:
-            best_bowler = max(bowling_stats, key=lambda x: x["wickets"])
+        if bowling_list:
+            best_bowler = max(bowling_list, key=lambda x: x["wickets"])
             if best_bowler["wickets"] > 0:
                 insights.append(f"Best bowler: {best_bowler['name']} with {best_bowler['wickets']} wickets")
         
         # Strike rate insights
-        if batting_stats:
-            fastest_scorer = max(batting_stats, key=lambda x: x["strike_rate"] if x["balls"] > 5 else 0)
+        if batting_list:
+            fastest_scorer = max(batting_list, key=lambda x: x["strike_rate"] if x["balls"] > 5 else 0)
             if fastest_scorer["balls"] > 5:
                 insights.append(f"Fastest scorer: {fastest_scorer['name']} (SR: {fastest_scorer['strike_rate']})")
         
         # Economy insights
-        if bowling_stats:
-            most_economical = min(bowling_stats, key=lambda x: x["economy_rate"] if x["balls_bowled"] > 5 else 999)
+        if bowling_list:
+            most_economical = min(bowling_list, key=lambda x: x["economy_rate"] if x["balls_bowled"] > 5 else 999)
             if most_economical["balls_bowled"] > 5:
                 insights.append(f"Most economical: {most_economical['name']} (ER: {most_economical['economy_rate']})")
         
         return {
-            "batting_stats": list(batting_stats.values()),
-            "bowling_stats": list(bowling_stats.values()),
+            "batting_stats": batting_list,
+            "bowling_stats": bowling_list,
             "fall_of_wickets": fall_of_wickets,
             "man_of_match": man_of_match,
             "player_scores": player_scores,

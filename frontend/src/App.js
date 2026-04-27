@@ -2611,204 +2611,88 @@ function MatchDetailPage() {
     );
   }
 
-  return (
-    <div className="max-w-6xl mx-auto p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Match Details</h1>
-        <a 
-          href="/matches" 
-          className="bg-green-700 hover:bg-green-800 text-white px-4 py-2 rounded-lg transition-colors"
-        >
-          ← Back to Matches
-        </a>
-      </div>
+  // Score calculations hoisted for sticky header
+  const _currentInnings = match.current_over?.innings || 1;
+  const _battingTeam = _currentInnings === 1 ? match.match?.batting_first :
+    (match.match?.batting_first === match.match?.team1 ? match.match?.team2 : match.match?.team1);
+  const _currentInningsData = match.innings_scores?.[_currentInnings];
+  const _isFirstInnings = _currentInnings === 1;
+  const _completedInningsData = match.innings_scores?.[1];
+  const _target = !_isFirstInnings && _completedInningsData ? _completedInningsData.runs + 1 : null;
+  const _totalOversForCRR = (_currentInningsData?.overs || 0) + ((_currentInningsData?.balls_in_current_over || 0) / 6);
+  const _crr = _totalOversForCRR === 0 ? '0.00' : ((_currentInningsData?.runs || 0) / _totalOversForCRR).toFixed(2);
 
-      {/* Match Header */}
-      <div className="bg-gradient-to-r from-green-900 to-green-700 text-white rounded-xl p-6 mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold">{match.match?.name}</h2>
-          <div className="flex items-center space-x-4">
-            <span className={`px-4 py-2 rounded-full text-sm font-medium ${
-              match.match?.status === 'live' ? 'bg-red-500 bg-opacity-20' : 
-              match.match?.status === 'completed' ? 'bg-green-600 bg-opacity-20' :
-              'bg-gray-500 bg-opacity-20'
-            }`}>
-              {match.match?.status === 'live' ? '🔴 LIVE' : 
-               match.match?.status === 'completed' ? '✅ COMPLETED' : 
-               '⏸️ ' + match.match?.status?.toUpperCase()}
-            </span>
+  return (
+    <>
+      {/* Sticky compact score header */}
+      <div className="sticky top-14 z-40 bg-white border-b border-gray-200 shadow-sm">
+        <div className="max-w-6xl mx-auto px-4 md:px-6">
+          {/* Row 1: match meta */}
+          <div className="flex items-center justify-between py-1.5 border-b border-gray-100">
+            <div className="flex items-center gap-2 min-w-0 text-xs text-gray-500">
+              <span className="truncate font-medium text-gray-700">{match.match?.name}</span>
+              <span className="hidden sm:inline text-gray-300">·</span>
+              <span className="hidden sm:inline truncate">{match.match?.venue}</span>
+              <span className="hidden sm:inline text-gray-300">·</span>
+              <span className="hidden sm:inline">{match.match?.match_type}</span>
+            </div>
+            <a href="/matches" className="text-xs text-green-700 hover:text-green-900 font-medium shrink-0 ml-4">
+              ← Matches
+            </a>
+          </div>
+          {/* Row 2: live score */}
+          <div className="flex items-center justify-between py-2 gap-4 flex-wrap">
+            <div className="flex items-center gap-3 tabular-nums">
+              {match.match?.status === 'live' && (
+                <span className="flex items-center gap-1 text-xs font-semibold text-red-600 uppercase tracking-widest shrink-0">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse inline-block"></span>
+                  Live
+                </span>
+              )}
+              {match.match?.status === 'completed' && (
+                <span className="text-xs font-semibold text-gray-500 uppercase tracking-widest shrink-0">Final</span>
+              )}
+              <span className="text-lg font-bold text-gray-900">
+                {_battingTeam} {_currentInningsData?.runs || 0}/{_currentInningsData?.wickets || 0}
+              </span>
+              <span className="text-sm text-gray-500">
+                ({_currentInningsData?.overs || 0}.{_currentInningsData?.balls_in_current_over || 0} ov)
+              </span>
+              <span className="text-xs text-gray-400 hidden sm:inline">
+                CRR <span className="font-medium text-gray-600">{_crr}</span>
+              </span>
+            </div>
+            <div className="flex items-center gap-4 text-xs tabular-nums">
+              {!_isFirstInnings && _target && (() => {
+                const _matchType2 = match.match?.match_type || 'T20';
+                const _totalOv = _matchType2 === 'T10' ? 10 : _matchType2 === 'ODI' ? 50 : 20;
+                const _ovRem = _totalOv - (_currentInningsData?.overs || 0) - ((_currentInningsData?.balls_in_current_over || 0) / 6);
+                const _runsNeeded = _target - (_currentInningsData?.runs || 0);
+                const _rrr = _ovRem > 0 ? (_runsNeeded / _ovRem).toFixed(2) : 'N/A';
+                return (
+                  <span className="text-gray-500">
+                    Need <span className="font-semibold text-gray-800">{_runsNeeded}</span> off{' '}
+                    <span className="font-semibold text-gray-800">{Math.floor(_ovRem)}.{Math.round((_ovRem % 1) * 6)} ov</span>
+                    <span className="hidden sm:inline"> · RRR <span className="font-semibold text-gray-800">{_rrr}</span></span>
+                    <span className="hidden sm:inline text-gray-400"> · 1st inn: {_completedInningsData?.runs}/{_completedInningsData?.wickets}</span>
+                  </span>
+                );
+              })()}
+              {match.match?.result && (
+                <span className="text-gray-600 font-medium">{match.match.result}</span>
+              )}
+              {match.match?.status !== 'live' && !match.match?.result && (
+                <span className="text-gray-400 uppercase tracking-wide">{match.match?.status}</span>
+              )}
+            </div>
           </div>
         </div>
-        
-        <div className="grid md:grid-cols-3 gap-4 text-sm opacity-90">
-          <div>📅 {new Date(match.match?.date).toLocaleDateString()}</div>
-          <div>📍 {match.match?.venue}</div>
-          <div>🏏 {match.match?.match_type}</div>
-        </div>
       </div>
 
+    <div className="max-w-6xl mx-auto p-6">
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Score Summary */}
         <div className="lg:col-span-2">
-          <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-            <h3 className="text-xl font-bold mb-4">Match Status</h3>
-            
-            {(() => {
-              // Determine current innings and batting team
-              const currentInnings = match.current_over?.innings || 1;
-              const battingTeam = currentInnings === 1 ? match.match?.batting_first : 
-                                 (match.match?.batting_first === match.match?.team1 ? match.match?.team2 : match.match?.team1);
-              const currentInningsData = match.innings_scores?.[currentInnings];
-              const isFirstInnings = currentInnings === 1;
-              const matchType = match.match?.match_type || 'T20';
-              
-              // Get completed innings data (for 2nd innings target calculation)
-              const completedInningsData = match.innings_scores?.[1];
-              const target = !isFirstInnings && completedInningsData ? completedInningsData.runs + 1 : null;
-              const runRate = (() => {
-                // Calculate total overs bowled (including partial overs)
-                const totalOvers = (currentInningsData?.overs || 0) + ((currentInningsData?.balls_in_current_over || 0) / 6);
-                const runs = currentInningsData?.runs || 0;
-                
-                // If no balls bowled, return 0.00
-                if (totalOvers === 0) return '0.00';
-                
-                // Calculate run rate as runs per over
-                return (runs / totalOvers).toFixed(2);
-              })();
-              
-              return (
-                <div>
-                  {/* Main Score Display */}
-                  <div className="text-center mb-6">
-                    <h2 className="text-4xl font-bold mb-2 text-green-700 tabular-nums">
-                      {battingTeam} {currentInningsData?.runs || 0}/{currentInningsData?.wickets || 0}
-                    </h2>
-                    <div className="text-xl text-gray-600 mb-2">
-                      ({currentInningsData?.overs || 0}.{currentInningsData?.balls_in_current_over || 0} overs)
-                    </div>
-                    
-                    {/* Match Context */}
-                    <div className="text-lg font-semibold text-gray-700 mb-1">
-                      {isFirstInnings ? 
-                        `${battingTeam} 1st Innings` : 
-                        `${battingTeam} 2nd Innings`
-                      }
-                    </div>
-                    
-                    {/* Current Run Rate */}
-                    <div className="text-sm text-gray-600">
-                      Current Run Rate: {runRate}
-                    </div>
-                  </div>
-                  
-                  {/* Target Information for 2nd Innings */}
-                  {!isFirstInnings && target && (
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-                      <div className="text-center">
-                        <div className="text-lg font-semibold text-green-800 mb-1">
-                          Target: {target} runs
-                        </div>
-                        <div className="text-sm text-green-700">
-                          Need {target - (currentInningsData?.runs || 0)} runs to win
-                          {matchType !== 'Test' && (
-                            <span> from {(() => {
-                              const totalOvers = matchType === 'T10' ? 10 : matchType === 'ODI' ? 50 : 20;
-                              const ballsRemaining = (totalOvers * 6) - ((currentInningsData?.overs || 0) * 6 + (currentInningsData?.balls_in_current_over || 0));
-                              return `${Math.floor(ballsRemaining / 6)}.${ballsRemaining % 6} overs`;
-                            })()}</span>
-                          )}
-                        </div>
-                        {matchType !== 'Test' && (
-                          <div className="text-sm text-green-700 mt-1">
-                            Required Run Rate: {(() => {
-                              const totalOvers = matchType === 'T10' ? 10 : matchType === 'ODI' ? 50 : 20;
-                              const oversRemaining = totalOvers - (currentInningsData?.overs || 0) - ((currentInningsData?.balls_in_current_over || 0) / 6);
-                              const runsNeeded = target - (currentInningsData?.runs || 0);
-                              return oversRemaining > 0 ? (runsNeeded / oversRemaining).toFixed(2) : 'N/A';
-                            })()}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* Key Stats Grid */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                    <div className="text-center p-3 bg-gray-50 rounded-lg">
-                      <div className="font-semibold text-gray-600">Match Type</div>
-                      <div className="text-lg font-bold">{matchType}</div>
-                    </div>
-                    <div className="text-center p-3 bg-gray-50 rounded-lg">
-                      <div className="font-semibold text-gray-600">Innings</div>
-                      <div className="text-lg font-bold">{currentInnings}{isFirstInnings ? 'st' : 'nd'}</div>
-                    </div>
-                    <div className="text-center p-3 bg-gray-50 rounded-lg">
-                      <div className="font-semibold text-gray-600">Status</div>
-                      <div className={`text-sm font-bold px-2 py-1 rounded ${
-                        match.match?.status === 'live' ? 'bg-green-100 text-green-800' :
-                        match.match?.status === 'completed' ? 'bg-green-100 text-green-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {match.match?.status?.toUpperCase()}
-                      </div>
-                    </div>
-                    <div className="text-center p-3 bg-gray-50 rounded-lg">
-                      <div className="font-semibold text-gray-600">Toss</div>
-                      <div className="text-sm font-bold">{match.match?.toss_winner || 'TBD'}</div>
-                      {match.match?.toss_decision && (
-                        <div className="text-xs text-gray-600">({match.match.toss_decision})</div>
-                      )}
-                    </div>
-                  </div>
-                  
-                  {/* Previous Innings Summary (for 2nd innings) */}
-                  {!isFirstInnings && completedInningsData && (
-                    <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-                      <div className="text-center">
-                        <div className="font-semibold text-green-800 mb-1">1st Innings Summary</div>
-                        <div className="text-green-700">
-                          {match.match?.batting_first}: {completedInningsData.runs}/{completedInningsData.wickets} 
-                          ({completedInningsData.overs}.{completedInningsData.balls_in_current_over} overs)
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* Key Stats Section - similar to image */}
-                  {match.match?.status === 'live' && (
-                    <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                      <h4 className="font-semibold text-yellow-800 mb-2">Key Stats</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-yellow-700">
-                        {/* Show recent balls info */}
-                        {match.balls && match.balls.length > 0 && (
-                          <div>
-                            <span className="font-medium">Last 10 overs:</span> {(() => {
-                              const recentBalls = match.balls.slice(-60); // Approximate last 10 overs
-                              const runs = recentBalls.reduce((total, ball) => total + (ball.runs || 0) + (ball.extras || 0), 0);
-                              const wickets = recentBalls.filter(ball => ball.wicket).length;
-                              return `${runs} runs, ${wickets} wkts`;
-                            })()}
-                          </div>
-                        )}
-                        <div>
-                          <span className="font-medium">Toss:</span> {match.match?.toss_winner} ({match.match?.toss_decision || 'chose to bat/bowl'})
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })()}
-
-            {/* Match Result */}
-            {match.match?.result && (
-              <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-                <h4 className="font-semibold text-green-800 mb-1">Match Result</h4>
-                <p className="text-green-700">{match.match.result}</p>
-              </div>
-            )}
-          </div>
 
           {/* Current Players Stats (Cricbuzz-style) */}
           {match.match?.status === 'live' && match.match_state && stats && (
@@ -2821,7 +2705,7 @@ function MatchDetailPage() {
                 <div className="space-y-3">
                   {/* Striker */}
                   {match.match_state.current_striker && (() => {
-                    const batterStats = stats.batting_statistics.find(b => b.name === match.match_state.current_striker);
+                    const batterStats = (stats?.batting_stats || []).find(b => b.name === match.match_state.current_striker);
                     const isOnStrike = match.match_state.on_strike === 'striker';
                     return (
                       <div className={`flex justify-between items-center p-3 rounded-lg border-2 ${
@@ -2859,7 +2743,7 @@ function MatchDetailPage() {
                   
                   {/* Non-Striker */}
                   {match.match_state.current_non_striker && (() => {
-                    const batterStats = stats.batting_statistics.find(b => b.name === match.match_state.current_non_striker);
+                    const batterStats = (stats?.batting_stats || []).find(b => b.name === match.match_state.current_non_striker);
                     const isOnStrike = match.match_state.on_strike === 'nonStriker';
                     return (
                       <div className={`flex justify-between items-center p-3 rounded-lg border-2 ${
@@ -2902,7 +2786,7 @@ function MatchDetailPage() {
                 <div className="mb-4">
                   <h4 className="text-lg font-semibold mb-3 text-amber-700">Bowler</h4>
                   {(() => {
-                    const bowlerStats = stats.bowling_statistics.find(b => b.name === match.match_state.current_bowler);
+                    const bowlerStats = (stats?.bowling_stats || []).find(b => b.name === match.match_state.current_bowler);
                     const overs = bowlerStats ? (bowlerStats.balls_bowled / 6).toFixed(1) : '0.0';
                     const maidens = 0; // We'd need to calculate this from ball-by-ball data
                     return (
@@ -3103,6 +2987,7 @@ function MatchDetailPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }
 
@@ -4209,35 +4094,34 @@ function ScoringPage() {
             {/* Current Ball Form */}
             <div className="space-y-4">
               {/* Auto-Submit Toggle */}
-              <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg">
-                <div>
-                  <h3 className="font-semibold text-green-800">Auto-submit mode</h3>
-                  <p className="text-sm text-green-700">Automatically submit balls and rotate strike</p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={autoSubmit}
-                    onChange={(e) => setAutoSubmit(e.target.checked)}
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-700"></div>
-                </label>
-              </div>
-              
-              {/* Auto-Submit Instructions */}
-              {autoSubmit && (
-                <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                  <h4 className="font-semibold text-green-800 mb-2">🚀 Auto-Submit Active</h4>
-                  <ul className="text-sm text-green-700 space-y-1">
-                    <li>• Click run buttons to instantly score and submit</li>
-                    <li>• Strike rotates automatically on odd runs</li>
-                    <li>• Strike rotates at the end of each over</li>
-                    <li>• Use quick action buttons for extras</li>
-                    <li>• Click "Wicket" for dismissals</li>
-                  </ul>
-                </div>
-              )}
+              <details className="bg-green-50 rounded-lg group">
+                <summary className="flex items-center justify-between px-3 py-2 cursor-pointer list-none select-none">
+                  <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={autoSubmit}
+                        onChange={(e) => setAutoSubmit(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-700"></div>
+                    </label>
+                    <span className="text-sm font-medium text-green-800">Auto-submit</span>
+                    {autoSubmit && <span className="text-xs text-green-600">· active</span>}
+                  </div>
+                  <span className="text-xs text-green-700 flex items-center gap-1">
+                    how it works
+                    <span className="inline-block transition-transform duration-200 group-open:rotate-180">▾</span>
+                  </span>
+                </summary>
+                <ul className="px-3 pb-3 pt-2 text-xs text-green-700 space-y-1 border-t border-green-100">
+                  <li>· Tap run buttons to instantly score and submit</li>
+                  <li>· Strike rotates automatically on odd runs</li>
+                  <li>· Strike rotates at the end of each over</li>
+                  <li>· Use quick action buttons for extras</li>
+                  <li>· Tap "Wicket" for dismissals</li>
+                </ul>
+              </details>
 
               {/* Batsmen Selection */}
               <div className="grid md:grid-cols-2 gap-4">
@@ -4895,18 +4779,9 @@ function ScoringPage() {
             
             <div className="flex space-x-3">
               <button
-                onClick={() => {
-                  setShowBowlerModal(false);
-                  setNewBowler('');
-                }}
-                className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 py-2 px-4 rounded-lg font-medium transition-colors"
-              >
-                Keep Current Bowler
-              </button>
-              <button
                 onClick={handleBowlerSelection}
                 disabled={!newBowler}
-                className="flex-1 bg-green-700 hover:bg-green-800 disabled:bg-gray-400 text-white py-2 px-4 rounded-lg font-medium transition-colors disabled:cursor-not-allowed"
+                className="w-full bg-green-700 hover:bg-green-800 disabled:bg-gray-400 text-white py-2 px-4 rounded-lg font-medium transition-colors disabled:cursor-not-allowed"
               >
                 Select Bowler
               </button>

@@ -7,6 +7,7 @@ import sqlite3
 import bcrypt
 import jwt
 from datetime import datetime, timedelta
+import json
 import uuid
 import os
 from contextlib import contextmanager
@@ -21,6 +22,13 @@ app = FastAPI(title="Cricklytics API", version="1.0.0")
 # CORS configuration
 allowed_origins = [
     "http://localhost:3000",  # Local development
+    "http://localhost:3001",
+    "http://localhost:5173",
+    "http://localhost:5177",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:3001",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:5177",
     "https://criclytics.oshoupadhyay.in",  # Production subdomain (fixed spelling)
     "https://oshoupadhyay.in",  # Main domain
     "https://www.oshoupadhyay.in",  # WWW subdomain
@@ -32,6 +40,7 @@ allowed_origins = [
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
+    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1):\d+$",
     allow_credentials=True,  # Allow credentials for authentication
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
@@ -43,6 +52,81 @@ security = HTTPBearer()
 # Database setup
 DATABASE_FILE = "cricklytics.db"
 
+DEFAULT_TEAMS = [
+    {
+        "name": "India",
+        "captain": "Rohit Sharma",
+        "vice_captain": "Hardik Pandya",
+        "players": [
+            {"name": "Rohit Sharma", "role": "Batter"},
+            {"name": "Shubman Gill", "role": "Batter"},
+            {"name": "Virat Kohli", "role": "Batter"},
+            {"name": "Suryakumar Yadav", "role": "Batter"},
+            {"name": "KL Rahul", "role": "Wicketkeeper-Batter"},
+            {"name": "Hardik Pandya", "role": "Batting Allrounder"},
+            {"name": "Ravindra Jadeja", "role": "Bowling Allrounder"},
+            {"name": "Kuldeep Yadav", "role": "Bowler"},
+            {"name": "Mohammed Shami", "role": "Bowler"},
+            {"name": "Mohammed Siraj", "role": "Bowler"},
+            {"name": "Jasprit Bumrah", "role": "Bowler"},
+        ],
+    },
+    {
+        "name": "Pakistan",
+        "captain": "Babar Azam",
+        "vice_captain": "Shaheen Shah Afridi",
+        "players": [
+            {"name": "Fakhar Zaman", "role": "Batter"},
+            {"name": "Imam-ul-Haq", "role": "Batter"},
+            {"name": "Babar Azam", "role": "Batter"},
+            {"name": "Mohammad Rizwan", "role": "Wicketkeeper-Batter"},
+            {"name": "Salman Ali Agha", "role": "Batting Allrounder"},
+            {"name": "Shadab Khan", "role": "Bowling Allrounder"},
+            {"name": "Iftikhar Ahmed", "role": "Batting Allrounder"},
+            {"name": "Shaheen Shah Afridi", "role": "Bowler"},
+            {"name": "Naseem Shah", "role": "Bowler"},
+            {"name": "Haris Rauf", "role": "Bowler"},
+            {"name": "Mohammad Wasim Jr", "role": "Bowler"},
+        ],
+    },
+    {
+        "name": "England",
+        "captain": "Jos Buttler",
+        "vice_captain": "Moeen Ali",
+        "players": [
+            {"name": "Jonny Bairstow", "role": "Wicketkeeper-Batter"},
+            {"name": "Dawid Malan", "role": "Batter"},
+            {"name": "Joe Root", "role": "Batter"},
+            {"name": "Harry Brook", "role": "Batter"},
+            {"name": "Jos Buttler", "role": "Wicketkeeper-Batter"},
+            {"name": "Moeen Ali", "role": "Batting Allrounder"},
+            {"name": "Liam Livingstone", "role": "Batting Allrounder"},
+            {"name": "Sam Curran", "role": "Bowling Allrounder"},
+            {"name": "Adil Rashid", "role": "Bowler"},
+            {"name": "Mark Wood", "role": "Bowler"},
+            {"name": "Jofra Archer", "role": "Bowler"},
+        ],
+    },
+    {
+        "name": "Australia",
+        "captain": "Pat Cummins",
+        "vice_captain": "Mitchell Marsh",
+        "players": [
+            {"name": "David Warner", "role": "Batter"},
+            {"name": "Travis Head", "role": "Batter"},
+            {"name": "Steve Smith", "role": "Batter"},
+            {"name": "Marnus Labuschagne", "role": "Batter"},
+            {"name": "Glenn Maxwell", "role": "Batting Allrounder"},
+            {"name": "Mitchell Marsh", "role": "Batting Allrounder"},
+            {"name": "Alex Carey", "role": "Wicketkeeper-Batter"},
+            {"name": "Pat Cummins", "role": "Bowler"},
+            {"name": "Mitchell Starc", "role": "Bowler"},
+            {"name": "Josh Hazlewood", "role": "Bowler"},
+            {"name": "Adam Zampa", "role": "Bowler"},
+        ],
+    },
+]
+
 @contextmanager
 def get_db():
     conn = sqlite3.connect(DATABASE_FILE)
@@ -51,6 +135,57 @@ def get_db():
         yield conn
     finally:
         conn.close()
+
+def seed_default_teams_for_user(cursor, user_id: str):
+    for team in DEFAULT_TEAMS:
+        cursor.execute("""
+            SELECT id, players FROM standalone_teams
+            WHERE lower(name) = lower(?) AND created_by = ?
+        """, (team["name"], user_id))
+
+        existing_team = cursor.fetchone()
+        if existing_team:
+            try:
+                existing_players = json.loads(existing_team["players"])
+            except (TypeError, json.JSONDecodeError):
+                existing_players = []
+
+            has_placeholder_players = any(
+                player.get("name", "").startswith(f"{team['name']} Player ")
+                for player in existing_players
+            )
+
+            if has_placeholder_players:
+                cursor.execute("""
+                    UPDATE standalone_teams
+                    SET players = ?, captain = ?, vice_captain = ?
+                    WHERE id = ?
+                """, (
+                    json.dumps(team["players"]),
+                    team["captain"],
+                    team["vice_captain"],
+                    existing_team["id"],
+                ))
+            continue
+
+        cursor.execute("""
+            INSERT INTO standalone_teams (id, name, players, captain, vice_captain,
+                                        total_matches, created_by)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (
+            str(uuid.uuid4()),
+            team["name"],
+            json.dumps(team["players"]),
+            team["captain"],
+            team["vice_captain"],
+            0,
+            user_id,
+        ))
+
+def seed_default_teams(cursor):
+    cursor.execute("SELECT id FROM users")
+    for user_row in cursor.fetchall():
+        seed_default_teams_for_user(cursor, user_row["id"])
 
 def init_database():
     with get_db() as conn:
@@ -81,6 +216,8 @@ def init_database():
                 toss_winner TEXT,
                 toss_decision TEXT,
                 batting_first TEXT,
+                team1_score TEXT DEFAULT '0/0',
+                team2_score TEXT DEFAULT 'Yet to bat',
                 status TEXT DEFAULT 'setup',
                 created_by TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -192,6 +329,16 @@ def init_database():
                 )
                 WHERE extras_type IN ('wide', 'no-ball')
             """)
+
+        # Migration: Add legacy score columns expected by older stats views.
+        cursor.execute("PRAGMA table_info(matches)")
+        match_columns = [column[1] for column in cursor.fetchall()]
+        if 'team1_score' not in match_columns:
+            cursor.execute("ALTER TABLE matches ADD COLUMN team1_score TEXT DEFAULT '0/0'")
+        if 'team2_score' not in match_columns:
+            cursor.execute("ALTER TABLE matches ADD COLUMN team2_score TEXT DEFAULT 'Yet to bat'")
+
+        seed_default_teams(cursor)
         
         conn.commit()
 
@@ -200,6 +347,7 @@ class UserRegister(BaseModel):
     username: str
     email: str
     password: str
+    confirm_password: str = Field(alias="confirmPassword")
 
 class UserLogin(BaseModel):
     username: str
@@ -296,6 +444,12 @@ def root():
 
 @app.post("/api/register", response_model=Token)
 def register(user: UserRegister):
+    if user.password != user.confirm_password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Passwords do not match"
+        )
+
     with get_db() as conn:
         cursor = conn.cursor()
         
@@ -317,6 +471,7 @@ def register(user: UserRegister):
             INSERT INTO users (id, username, email, password_hash, role)
             VALUES (?, ?, ?, ?, ?)
         """, (user_id, user.username, user.email, password_hash.decode('utf-8'), 'scorer'))
+        seed_default_teams_for_user(cursor, user_id)
         
         conn.commit()
         
@@ -372,27 +527,20 @@ def get_global_stats():
         cursor.execute("SELECT COUNT(*) as count FROM matches")
         total_matches = cursor.fetchone()['count']
         
-        # Get total balls (from match_balls table if it exists)
-        try:
-            cursor.execute("SELECT COUNT(*) as count FROM match_balls")
-            total_balls = cursor.fetchone()['count']
-        except sqlite3.OperationalError:
-            total_balls = 0
-        
-        # Get total runs (sum from matches)
+        # Get total legal balls from the ball-by-ball scoring table
         cursor.execute("""
-            SELECT COALESCE(SUM(
-                CAST(SUBSTR(team1_score, 1, INSTR(team1_score, '/') - 1) AS INTEGER) +
-                CAST(SUBSTR(team2_score, 1, INSTR(team2_score, '/') - 1) AS INTEGER)
-            ), 0) as total_runs
-            FROM matches 
-            WHERE team1_score IS NOT NULL AND team1_score != '0/0' 
-            AND team2_score IS NOT NULL AND team2_score != 'Yet to bat'
+            SELECT COUNT(*) as count
+            FROM balls
+            WHERE extras_type IS NULL OR extras_type NOT IN ('wide', 'no-ball')
         """)
-        try:
-            total_runs = cursor.fetchone()['total_runs'] or 0
-        except:
-            total_runs = 0
+        total_balls = cursor.fetchone()['count']
+        
+        # Get total runs from ball-by-ball data
+        cursor.execute("""
+            SELECT COALESCE(SUM(runs + extras), 0) as total_runs
+            FROM balls
+        """)
+        total_runs = cursor.fetchone()['total_runs'] or 0
         
         # Get active users (users who have created matches)
         cursor.execute("SELECT COUNT(DISTINCT created_by) as count FROM matches")

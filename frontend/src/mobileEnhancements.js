@@ -244,19 +244,4 @@ export const initializeMobileEnhancements = () => {
     }, 100);
   });
   
-  // Debug mode for development
-  if (process.env.NODE_ENV === 'development') {
-    // Import and run mobile debug tools
-    import('./mobileDebug.js').then(({ addMobileDebugInfo, testMobileFeatures, testMobileMenu }) => {
-      addMobileDebugInfo();
-      
-      // Auto-test mobile features after page loads
-      setTimeout(() => {
-        testMobileFeatures();
-        testMobileMenu();
-      }, 2000);
-    }).catch(err => {
-      console.log('Debug tools not available:', err);
-    });
-  }
 };

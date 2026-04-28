@@ -919,7 +919,7 @@ def get_match_score(match_id: str):
             "innings_scores": innings_scores,
             "current_over": current_over,
             "match_state": state_dict,
-            "balls": balls[-10:] if balls else []  # Last 10 balls
+            "balls": balls
         }
 
 @app.get("/api/matches/{match_id}/balls")

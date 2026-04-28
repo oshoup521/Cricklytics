@@ -2552,6 +2552,24 @@ function MatchDetailPage() {
           } else if (latest.runs === 4) {
             setCelebration({ type: 'four', text: 'FOUR!', sub: `${latest.batsman} finds the boundary` });
             setTimeout(() => setCelebration(null), 3000);
+          } else if (latest.extras_type !== 'wide') {
+            // Check for batting milestones
+            const allBalls = newBalls;
+            const batRunTotals = {};
+            allBalls.forEach(b => {
+              if (b.extras_type === 'wide') return;
+              const k = `${b.innings}-${b.batsman}`;
+              batRunTotals[k] = (batRunTotals[k] || 0) + b.runs;
+            });
+            const bKey = `${latest.innings}-${latest.batsman}`;
+            const total = batRunTotals[bKey] || 0;
+            const prev = total - latest.runs;
+            const crossed = [50, 100, 150].find(ms => prev < ms && total >= ms);
+            if (crossed) {
+              const label = crossed === 100 ? 'CENTURY!' : crossed === 50 ? 'FIFTY!' : '150 UP!';
+              setCelebration({ type: 'milestone', text: label, sub: `${latest.batsman} reaches ${crossed}` });
+              setTimeout(() => setCelebration(null), 3500);
+            }
           }
         }
       }
@@ -2846,65 +2864,187 @@ function MatchDetailPage() {
             </div>
           )}
 
-          {/* Recent Balls */}
+          {/* Commentary */}
           <div className="bg-white rounded-xl shadow-lg p-6">
-            <h3 className="text-xl font-bold mb-4">Recent Balls</h3>
-            <div className="space-y-2 max-h-80 overflow-y-auto">
-              {match.balls && match.balls.length > 0 ? match.balls.slice(-10).reverse().map((ball, index) => {
-                const isSix = ball.runs === 6 && !ball.wicket;
-                const isFour = ball.runs === 4 && !ball.wicket;
-                const isWicket = !!ball.wicket;
-                return (
-                  <div key={index} className={`flex items-center gap-3 px-3 py-2.5 rounded-lg border ${
-                    isWicket ? 'bg-red-50 border-red-200' :
-                    isSix    ? 'bg-emerald-50 border-emerald-200' :
-                    isFour   ? 'bg-blue-50 border-blue-200' :
-                    'bg-gray-50 border-transparent'
-                  }`}>
-                    {/* Ball badge */}
-                    {(() => {
-                      const extType = ball.extras_type;
-                      let badgeLabel;
-                      if (isWicket) badgeLabel = 'W';
-                      else if (extType === 'wide') badgeLabel = 'Wd';
-                      else if (extType === 'no-ball') badgeLabel = 'NB';
-                      else if (extType === 'bye') badgeLabel = `${ball.extras}B`;
-                      else if (extType === 'leg-bye') badgeLabel = `${ball.extras}LB`;
-                      else badgeLabel = ball.runs;
-                      return (
-                        <div className={`shrink-0 w-9 h-9 rounded-full flex items-center justify-center font-black text-sm ${
-                          isWicket ? 'bg-red-600 text-white' :
-                          isSix    ? 'bg-emerald-600 text-white' :
-                          isFour   ? 'bg-blue-600 text-white' :
-                          extType  ? 'bg-yellow-400 text-yellow-900' :
-                          'bg-gray-200 text-gray-700'
-                        }`}>
-                          {badgeLabel}
+            <h3 className="text-xl font-bold mb-4">Commentary</h3>
+            <div className="space-y-3 max-h-[600px] overflow-y-auto">
+              {match.balls && match.balls.length > 0 ? (() => {
+                // Pre-compute batting milestones (chronological order)
+                const batRunTotals = {};
+                const milestoneMap = {};
+                [...match.balls].forEach(ball => {
+                  if (ball.extras_type === 'wide') return;
+                  const bKey = `${ball.innings}-${ball.batsman}`;
+                  const prev = batRunTotals[bKey] || 0;
+                  const next = prev + ball.runs;
+                  batRunTotals[bKey] = next;
+                  [50, 100, 150].forEach(ms => {
+                    if (prev < ms && next >= ms) {
+                      milestoneMap[`${ball.innings}-${ball.over_number}-${ball.ball_number}`] = {
+                        batsman: ball.batsman, score: ms
+                      };
+                    }
+                  });
+                });
+
+                // Group balls by innings + over, preserving newest-first order
+                const overGroups = [];
+                const seen = {};
+                [...match.balls].reverse().forEach(ball => {
+                  const key = `${ball.innings}-${ball.over_number}`;
+                  if (!seen[key]) {
+                    seen[key] = { key, innings: ball.innings, over: ball.over_number, balls: [] };
+                    overGroups.push(seen[key]);
+                  }
+                  seen[key].balls.push(ball);
+                });
+
+                return overGroups.map(({ key, over, balls }) => {
+                  const isComplete = balls.some(b => b.legal_ball_number === 6);
+                  const overRuns = balls.reduce((sum, b) => sum + b.runs + b.extras, 0);
+                  const overWickets = balls.filter(b => b.wicket).length;
+                  const bowler = balls[0]?.bowler;
+                  const ballsAsc = [...balls].sort((a, b) => a.ball_number - b.ball_number);
+
+                  return (
+                    <div key={key} className="space-y-1.5">
+                      {/* Over summary card — shown only when over is complete */}
+                      {isComplete && (
+                        <div className="bg-gray-100 border border-gray-200 rounded-lg p-3 mb-1">
+                          <div className="flex items-center justify-between mb-2">
+                            <div>
+                              <span className="font-bold text-gray-800 text-sm">End of Over {over}</span>
+                              {bowler && <span className="text-xs text-gray-500 ml-2">• {bowler}</span>}
+                            </div>
+                            <div className="text-sm font-semibold text-gray-700">
+                              {overRuns} run{overRuns !== 1 ? 's' : ''}
+                              {overWickets > 0 && (
+                                <span className="text-red-600 ml-2">• {overWickets} wkt{overWickets > 1 ? 's' : ''}</span>
+                              )}
+                            </div>
+                          </div>
+                          {/* Ball sequence chips */}
+                          <div className="flex gap-1.5 flex-wrap">
+                            {ballsAsc.map((b, i) => {
+                              const isW  = !!b.wicket;
+                              const is6  = b.runs === 6 && !b.wicket;
+                              const is4  = b.runs === 4 && !b.wicket;
+                              const ext  = b.extras_type;
+                              let chip;
+                              if (isW) chip = 'W';
+                              else if (ext === 'wide') chip = 'Wd';
+                              else if (ext === 'no-ball') chip = 'NB';
+                              else if (ext === 'bye') chip = `${b.extras}B`;
+                              else if (ext === 'leg-bye') chip = `${b.extras}LB`;
+                              else chip = b.runs;
+                              return (
+                                <div key={i} className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
+                                  isW ? 'bg-red-600 text-white' :
+                                  is6 ? 'bg-emerald-600 text-white' :
+                                  is4 ? 'bg-blue-600 text-white' :
+                                  ext ? 'bg-yellow-400 text-yellow-900' :
+                                  'bg-gray-300 text-gray-700'
+                                }`}>
+                                  {chip}
+                                </div>
+                              );
+                            })}
+                          </div>
                         </div>
-                      );
-                    })()}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-xs font-semibold text-gray-500 tabular-nums">
-                          {ball.over_number - 1}.{ball.legal_ball_number}
-                        </span>
-                        {isWicket && <span className="text-xs font-bold text-red-700 uppercase tracking-wide">Wicket</span>}
-                        {isSix    && <span className="text-xs font-bold text-emerald-700 uppercase tracking-wide">Six</span>}
-                        {isFour   && <span className="text-xs font-bold text-blue-700 uppercase tracking-wide">Four</span>}
-                        {ball.extras_type && (
-                          <span className="text-xs text-yellow-700 font-medium">{ball.extras_type}</span>
-                        )}
-                      </div>
-                      <div className="text-xs text-gray-500 truncate mt-0.5">
-                        {ball.batsman} <span className="text-gray-300">vs</span> {ball.bowler}
-                      </div>
-                      {ball.commentary && !/^\d+ runs? scored$/.test(ball.commentary) && (
-                        <div className="text-xs text-gray-600 italic mt-0.5 truncate">{ball.commentary}</div>
                       )}
+
+                      {/* Individual ball rows (newest first) */}
+                      {balls.map((ball, index) => {
+                        const isSix = ball.runs === 6 && !ball.wicket;
+                        const isFour = ball.runs === 4 && !ball.wicket;
+                        const isWicket = !!ball.wicket;
+                        const extType = ball.extras_type;
+                        const milestone = milestoneMap[`${ball.innings}-${ball.over_number}-${ball.ball_number}`];
+                        let badgeLabel;
+                        if (isWicket) badgeLabel = 'W';
+                        else if (extType === 'wide') badgeLabel = 'Wd';
+                        else if (extType === 'no-ball') badgeLabel = 'NB';
+                        else if (extType === 'bye') badgeLabel = `${ball.extras}B`;
+                        else if (extType === 'leg-bye') badgeLabel = `${ball.extras}LB`;
+                        else badgeLabel = ball.runs;
+                        const milestoneLabel = milestone?.score === 100 ? 'CENTURY' : milestone?.score === 50 ? 'FIFTY' : milestone?.score ? `${milestone.score}★` : null;
+                        const isMilestone = !!milestone;
+                        return (
+                          <React.Fragment key={index}>
+                            <div className={`flex items-center gap-3 px-3 py-2.5 rounded-lg border ${
+                              isMilestone  ? 'bg-amber-50 border-amber-300' :
+                              isWicket ? 'bg-red-50 border-red-200' :
+                              isSix    ? 'bg-emerald-50 border-emerald-200' :
+                              isFour   ? 'bg-blue-50 border-blue-200' :
+                              'bg-gray-50 border-transparent'
+                            }`}>
+                              <div className={`shrink-0 w-9 h-9 rounded-full flex items-center justify-center font-black text-sm ${
+                                isWicket ? 'bg-red-600 text-white' :
+                                isSix    ? 'bg-emerald-600 text-white' :
+                                isFour   ? 'bg-blue-600 text-white' :
+                                extType  ? 'bg-yellow-400 text-yellow-900' :
+                                'bg-gray-200 text-gray-700'
+                              }`}>
+                                {badgeLabel}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="text-xs font-semibold text-gray-500 tabular-nums">
+                                    {ball.over_number - 1}.{ball.legal_ball_number}
+                                  </span>
+                                  {isWicket && <span className="text-xs font-bold text-red-700 uppercase tracking-wide">Wicket</span>}
+                                  {isSix    && <span className="text-xs font-bold text-emerald-700 uppercase tracking-wide">Six</span>}
+                                  {isFour   && <span className="text-xs font-bold text-blue-700 uppercase tracking-wide">Four</span>}
+                                  {milestoneLabel && (
+                                    <span className="text-xs font-bold text-amber-700 uppercase tracking-wide">
+                                      {milestoneLabel} ★
+                                    </span>
+                                  )}
+                                  {ball.extras_type && (
+                                    <span className="text-xs text-yellow-700 font-medium">{ball.extras_type}</span>
+                                  )}
+                                </div>
+                                <div className="text-xs text-gray-500 mt-0.5">
+                                  {ball.batsman} <span className="text-gray-300">vs</span> {ball.bowler}
+                                </div>
+                                {ball.commentary && !/^\d+ runs? scored$/.test(ball.commentary) && (
+                                  <div className="text-xs text-gray-600 italic mt-0.5">{ball.commentary}</div>
+                                )}
+                              </div>
+                            </div>
+                            {/* Milestone banner card */}
+                            {isMilestone && (
+                              <div className={`rounded-lg px-4 py-3 flex items-center gap-3 border ${
+                                milestone.score === 100 ? 'bg-violet-50 border-violet-300' :
+                                milestone.score === 150 ? 'bg-purple-50 border-purple-400' :
+                                'bg-amber-50 border-amber-300'
+                              }`}>
+                                <span className="text-2xl">{milestone.score === 100 ? '💯' : milestone.score === 150 ? '🏆' : '⭐'}</span>
+                                <div>
+                                  <div className={`font-bold text-sm ${
+                                    milestone.score === 100 ? 'text-violet-800' :
+                                    milestone.score === 150 ? 'text-purple-900' :
+                                    'text-amber-800'
+                                  }`}>
+                                    {milestone.score === 50 ? 'FIFTY!' : milestone.score === 100 ? 'CENTURY!' : '150 UP!'}
+                                  </div>
+                                  <div className={`text-xs ${
+                                    milestone.score === 100 ? 'text-violet-600' :
+                                    milestone.score === 150 ? 'text-purple-700' :
+                                    'text-amber-600'
+                                  }`}>
+                                    {milestone.batsman} reaches {milestone.score}
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </React.Fragment>
+                        );
+                      })}
                     </div>
-                  </div>
-                );
-              }) : (
+                  );
+                });
+              })() : (
                 <div className="text-center py-8 text-gray-500">
                   <p>No balls recorded yet</p>
                   <p className="text-sm">Match scoring hasn't started</p>
@@ -3038,7 +3178,8 @@ function MatchDetailPage() {
           {/* Backdrop flash */}
           <div className={`absolute inset-0 animate-celebrationFade ${
             celebration.type === 'wicket' ? 'bg-red-900' :
-            celebration.type === 'six' ? 'bg-green-900' : 'bg-blue-900'
+            celebration.type === 'six' ? 'bg-green-900' :
+            celebration.type === 'milestone' ? 'bg-amber-800' : 'bg-blue-900'
           } opacity-0`} />
 
           {/* Particles */}
@@ -3067,6 +3208,8 @@ function MatchDetailPage() {
               ? 'bg-gradient-to-br from-red-700 to-red-900 text-white'
               : celebration.type === 'six'
               ? 'bg-gradient-to-br from-green-600 to-emerald-800 text-white'
+              : celebration.type === 'milestone'
+              ? 'bg-gradient-to-br from-amber-500 to-yellow-700 text-white'
               : 'bg-gradient-to-br from-blue-600 to-blue-900 text-white'
           }`}>
             <div className="text-7xl font-black tracking-tight leading-none mb-2">
